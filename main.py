@@ -1,5 +1,8 @@
+from __future__ import print_function
 import streamlit as st
 import math
+from mailmerge import MailMerge
+
 
 
 #st.latex(r'''\tag*{hi} E_{cm}''')
@@ -23,6 +26,7 @@ tab3.write("MEd_tot = "+str(M_ed_tot)+" kNm")
 Ac = h*b                                            #Betongareal
 As = (math.pow(ø/2,2)*math.pi*b)/s                  #Armeringsareal
 d = h-c-(ø/2)                                       #Effektiv tverrsnittstykkelse
+tab1.write("As = "+str(As))
 
 RHstr = tab2.slider(
     "Relativ luftfuktighet (RH)",
@@ -117,12 +121,15 @@ else:
 if sement == "S":
     alfa_ds1 = 3
     alfa_ds2 = 0.13
+    alfa_t0 = -1
 elif sement == "N":
     alfa_ds1 = 4
     alfa_ds2 = 0.12
+    alfa_t0 = 0
 elif sement == "R":
     alfa_ds1 = 6
     alfa_ds2 = 0.11
+    alfa_t0 =1
 
 
 f_cmo = 10                                          #(B.12)
@@ -149,6 +156,7 @@ else:
 beta_ct_to = math.pow((t-t0)/(beta_H+t-t0),0.3)                 #(B.7)
 phi_0 = phi_RH*beta_f_cm*beta_t0                                #(B.2)
 beta_RH = 1.55*(1-math.pow((RH/RH0),3))                         #(B.12)
+
 #Nominell verdi for svinntøyning ved uttørking (B.11)
 epsilon_cd0 = 0.85*((220+110*alfa_ds1)*math.pow(math.e,(-alfa_ds2*(f_cm/f_cmo))))*math.pow(10,-6)*beta_RH
 beta_ds_t_ts = (t-t0)/((t-t0)+0.04*math.sqrt(math.pow(h0,3)))   #(3.10)
@@ -160,8 +168,8 @@ epsilon_cs_beregnet = 1000*(epsilon_cd_t+epsilon_ca_t)          #(3.8)
 phi_beregnet = phi_0*beta_ct_to                                 #(B.1)
 
 
-phi = tab2.number_input("Kryptall:",value=phi_beregnet)
-epsilon_cs = (tab2.number_input("Svinntøyning:",value=epsilon_cs_beregnet))/1000000
+phi = tab2.number_input("Kryptall:",value=round(phi_beregnet,3))
+epsilon_cs = (tab2.number_input("Svinntøyning:",value=round(epsilon_cs_beregnet,3)))/1000000
 
 
 n_short = M_ed_short/M_ed_tot                       #Andel korttidslast
@@ -224,3 +232,26 @@ st.sidebar.header("Statiske beregninger")
 st.sidebar.write("Armeringsspenning: "+str(round(sigma_s*1000000))+ " MPa")
 st.sidebar.write("Rissvidde uten svinntøyning: "+str(round(w_k,3))+ " mm")
 st.sidebar.write("Rissvidde med svinntøyning: "+str(round(w_k_ecs,3))+ " mm")
+
+document = MailMerge("template.docx")
+print(document.get_merge_fields())
+dok = st.text_input("Dokumentnavn", value="Beregning av riss")
+document.merge(
+        h= str(h),
+        b= str(b),
+        A_c= str(Ac),
+        d= str(round(d)),
+        ø= str(ø),
+        c_nom= str(c),
+        Betongkvalitet= str(valg_betongkvalitet),
+        E_c= str(E_cm),
+        f_cm= str(f_cm),
+        f_ctm= str(f_ctm),
+        s= str(s),
+        f_ck= str(f_ck)
+    )
+if st.button("Dokumentasjon"):
+    file_temp = document.write("template_temp.docx")
+    file = open("template_temp.docx", "rb")
+    st.download_button(label="Last ned "+dok+".docx", file_name= dok+".docx", data=file, mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document")
+    file.close(
