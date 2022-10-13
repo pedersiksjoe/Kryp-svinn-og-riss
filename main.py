@@ -115,26 +115,26 @@ else:
 
 #B.2
 if sement == "S":
-    alfa_ds1 = 3
-    alfa_ds2 = 0.13
-    alfa_t0 = -1
+    alpha_ds1 = 3
+    alpha_ds2 = 0.13
+    alpha_t0 = -1
 elif sement == "N":
-    alfa_ds1 = 4
-    alfa_ds2 = 0.12
-    alfa_t0 = 0
+    alpha_ds1 = 4
+    alpha_ds2 = 0.12
+    alphaa_t0 = 0
 elif sement == "R":
-    alfa_ds1 = 6
-    alfa_ds2 = 0.11
-    alfa_t0 =1
+    alpha_ds1 = 6
+    alpha_ds2 = 0.11
+    alpha_t0 =1
 
 
 f_cmo = 10                                          #(B.12)
 
 beta_f_cm =16.8/(math.sqrt(f_cm))                   #(B.4)
 beta_t0 = 1/(0.1+math.pow(t0,0.2))                  #(B.4)
-alfa_1 = math.pow((35/f_cm),0.7)                    #(B.8.c)
-alfa_2 = math.pow((35/f_cm),0.2)                    #(B.8.c)
-alfa_3 = math.pow((35/f_cm),0.5)                    #(B.8.c)
+alpha_1 = math.pow((35/f_cm),0.7)                    #(B.8.c)
+alpha_2 = math.pow((35/f_cm),0.2)                    #(B.8.c)
+alpha_3 = math.pow((35/f_cm),0.5)                    #(B.8.c)
 
 #(B.3a)
 #(B.3b)
@@ -145,8 +145,8 @@ if f_cm <= 35:
     phi_RH = 1+((1-RH)/(0.1*math.pow(h0,(1/3))))
     beta_H =min(1500,1.5*(1+math.pow(0.012*100*RH,18))*h0+250)
 else:
-    phi_RH = (1 + ((1 - RH) / (0.1 * math.pow(h0, (1 / 3))))*alfa_1)*alfa_2
-    beta_H = min(1500*alfa_3, (1.5 * (1 + math.pow(0.012 * 100 * RH, 18)) * h0 + 250)*alfa_3)
+    phi_RH = (1 + ((1 - RH) / (0.1 * math.pow(h0, (1 / 3))))*alpha_1)*alpha_2
+    beta_H = min(1500*alpha_3, (1.5 * (1 + math.pow(0.012 * 100 * RH, 18)) * h0 + 250)*alpha_3)
 
 
 beta_ct_to = math.pow((t-t0)/(beta_H+t-t0),0.3)                 #(B.7)
@@ -154,7 +154,7 @@ phi_0 = phi_RH*beta_f_cm*beta_t0                                #(B.2)
 beta_RH = 1.55*(1-math.pow((RH/RH0),3))                         #(B.12)
 
 #Nominell verdi for svinntøyning ved uttørking (B.11)
-epsilon_cd0 = 0.85*((220+110*alfa_ds1)*math.pow(math.e,(-alfa_ds2*(f_cm/f_cmo))))*math.pow(10,-6)*beta_RH
+epsilon_cd0 = 0.85*((220+110*alpha_ds1)*math.pow(math.e,(-alpha_ds2*(f_cm/f_cmo))))*math.pow(10,-6)*beta_RH
 beta_ds_t_ts = (t-t0)/((t-t0)+0.04*math.sqrt(math.pow(h0,3)))   #(3.10)
 epsilon_cd_t = beta_ds_t_ts*k_h*epsilon_cd0                     #(3.9)
 epsilon_ca_lim = 2.5*(f_ck-10)*math.pow(10,-6)                  #(3.12)
@@ -275,8 +275,8 @@ document.merge(
         M_ed_short= str(M_ed_short),
         M_ed_long= str(M_ed_long),
         M_ed_tot= str(M_ed_tot),
-        n_short= str(n_short),
-        n_long= str(n_long),
+        n_short= str(round(n_short,3)),
+        n_long= str(round(n_long,3)),
         E_c_long= str(round(E_c_long)),
         E_c_mean= str(round(E_c_mean)),
         eta_long= str(round(eta_long,2)),
@@ -287,12 +287,12 @@ document.merge(
         alpha=str(round(alpha,3)),
         I_s=str(round(I_s)),
         sigma_s=str(round(sigma_s*1000000)),
-        k_t= str(k_t),
+        k_t= str(round(k_t,3)),
         h_c_ef= str(round(h_c_ef,1)),
         A_c_eff= str(round(A_c_eff)),
-        alpha_e=str(alpha_e),
-        rho_p_eff=str(rho_p_eff),
-        epsilon_sm_e_cm= str(epsilon_sm_e_cm),
+        alpha_e=str(round(alpha_e,3)),
+        rho_p_eff=str(round(rho_p_eff,4)),
+        epsilon_sm_e_cm= str(round(1000*epsilon_sm_e_cm,6)),
         k_1= str(k_1),
         k_2= str(k_2),
         s_grenseverdi = str(s_grenseverdi),
@@ -301,12 +301,34 @@ document.merge(
         s_r_max= str(round(s_r_max)),
         w_k=str(round(w_k,3)),
         w_k_ecs= str(round(w_k_ecs, 3)),
-        epsilon_cs= str(round(epsilon_cs,3)/1000000),
-        phi=str(round(phi,3))
-
+        epsilon_cs= str(round(1000000*epsilon_cs,3)),
+        phi=str(round(phi,3)),
+        alpha_ds1=str(alpha_ds1),
+        alpha_ds2=str(alpha_ds2),
+        u=str(round(u)),
+        h_0=str(round(h0)),
+        k_h=str(round(k_h,2)),
+        beta_f_cm=str(round(beta_f_cm,3)),
+        beta_t_0=str(round(beta_t0,3)),
+        alpha_1=str(round(alpha_1,3)),
+        alpha_2=str(round(alpha_2,3)),
+        alpha_3=str(round(alpha_3,3)),
+        phi_RH= str(round(phi_RH,3)),
+        beta_H= str(round(beta_H)),
+        beta_c_t_t0= str(round(beta_ct_to,2)),
+        phi_0=str(round(phi_0,3)),
+        beta_RH= str(round(beta_RH,3)),
+        epsilon_cd_0=str(round(1000*epsilon_cd0,4)),
+        beta_ds_t_ts=str(round(beta_ds_t_ts,2)),
+        epsilon_cd_t=str(round(1000*epsilon_cd_t,4)),
+        epsilon_ca_lim=str(round(1000*epsilon_ca_lim,4)),
+        beta_as_t=str(round(beta_ast,2)),
+        epsilon_ca_t=str(round(epsilon_ca_t*1000,4))
     )
+
 if tab4.button("Dokumentasjon"):
     file_temp = document.write("template_temp.docx")
     file = open("template_temp.docx", "rb")
     tab4.download_button(label="Last ned "+dok+".docx", file_name= dok+".docx", data=file, mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document")
     file.close()
+
