@@ -2,13 +2,9 @@ from __future__ import print_function
 import streamlit as st
 import math
 from mailmerge import MailMerge
+import datetime
 
-
-
-#st.latex(r'''\tag*{hi} E_{cm}''')
-
-
-tab1, tab2, tab3 = st.tabs(["Generell materialdata", "Kryp og svinn", "Rissberegning"])
+tab1, tab2, tab3, tab4 = st.tabs(["Generell materialdata", "Kryp og svinn", "Rissberegning", "Dokumentasjon"])
 
 tab3.header("Beregning av rissvidde")
 #inndata
@@ -233,13 +229,31 @@ st.sidebar.write("Armeringsspenning: "+str(round(sigma_s*1000000))+ " MPa")
 st.sidebar.write("Rissvidde uten svinntøyning: "+str(round(w_k,3))+ " mm")
 st.sidebar.write("Rissvidde med svinntøyning: "+str(round(w_k_ecs,3))+ " mm")
 
+
+
+doknavn = tab4.text_input("Dokumentnavn", value="Beregning av riss")
+doknr = tab4.text_input("Dokumentnummer")
+dok = doknr+" - "+doknavn
+Oppdragsnummer = tab4.text_input("Oppdragsnummer", value="522xxxxx")
+Oppdragsgiver = tab4.text_input("Oppdragsgiver")
+Sign_EK = tab4.text_input("Signatur EK")
+Sign_FK = tab4.text_input("Signatur FK")
+Sign_godkjenning = tab4.text_input("Signatur Godkjenning")
+dato = tab4.text_input("Dato EK", value=str(datetime.date.today()))
+
+
 document = MailMerge("template.docx")
 print(document.get_merge_fields())
-dok = st.text_input("Dokumentnavn", value="Beregning av riss")
+
 document.merge(
+        Sign_FK= Sign_FK,
+        Sign_EK= Sign_EK,
+        Sign_godkjenning= Sign_godkjenning,
+        dato=dato,
         h= str(h),
         b= str(b),
         A_c= str(Ac),
+        A_s= str(round(As)),
         d= str(round(d)),
         ø= str(ø),
         c_nom= str(c),
@@ -248,10 +262,51 @@ document.merge(
         f_cm= str(f_cm),
         f_ctm= str(f_ctm),
         s= str(s),
-        f_ck= str(f_ck)
+        f_ck= str(f_ck),
+        Dokumentnavn= str(doknavn),
+        Dokumentnummer= str(doknr),
+        Oppdragsnummer= str(Oppdragsnummer),
+        Oppdragsgiver= str(Oppdragsgiver),
+        Uttørking= uttørking,
+        levetid= Levetid,
+        RH= str(int(RH*100))+"%",
+        Sementklasse= sement,
+        t_0=str(t0),
+        M_ed_short= str(M_ed_short),
+        M_ed_long= str(M_ed_long),
+        M_ed_tot= str(M_ed_tot),
+        n_short= str(n_short),
+        n_long= str(n_long),
+        E_c_long= str(round(E_c_long)),
+        E_c_mean= str(round(E_c_mean)),
+        eta_long= str(round(eta_long,2)),
+        eta_short= str(round(eta_short,2)),
+        eta_mean= str(round(eta_mean,2)),
+        rho= str(round(rho,6)),
+        eta= str(round(eta,2)),
+        alpha=str(round(alpha,3)),
+        I_s=str(round(I_s)),
+        sigma_s=str(round(sigma_s*1000000)),
+        k_t= str(k_t),
+        h_c_ef= str(round(h_c_ef,1)),
+        A_c_eff= str(round(A_c_eff)),
+        alpha_e=str(alpha_e),
+        rho_p_eff=str(rho_p_eff),
+        epsilon_sm_e_cm= str(epsilon_sm_e_cm),
+        k_1= str(k_1),
+        k_2= str(k_2),
+        s_grenseverdi = str(s_grenseverdi),
+        s_r_max1= str(round(s_r_max1)),
+        s_r_max2= str(round(s_r_max2)),
+        s_r_max= str(round(s_r_max)),
+        w_k=str(round(w_k,3)),
+        w_k_ecs= str(round(w_k_ecs, 3)),
+        epsilon_cs= str(round(epsilon_cs,3)/1000000),
+        phi=str(round(phi,3))
+
     )
-if st.button("Dokumentasjon"):
+if tab4.button("Dokumentasjon"):
     file_temp = document.write("template_temp.docx")
     file = open("template_temp.docx", "rb")
-    st.download_button(label="Last ned "+dok+".docx", file_name= dok+".docx", data=file, mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document")
-    file.close(
+    tab4.download_button(label="Last ned "+dok+".docx", file_name= dok+".docx", data=file, mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document")
+    file.close()
