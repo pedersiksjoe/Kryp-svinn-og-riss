@@ -8,21 +8,21 @@ tab1, tab2, tab3, tab4 = st.tabs(["Generell materialdata", "Kryp og svinn", "Ris
 
 tab3.header("Beregning av rissvidde")
 #inndata
-tab1.header("Geometri og laster")
+tab1.header("Geometri, laster og betongkvalitet")
 h = tab1.number_input("Tversnittshøyde[mm]:",value=250)
 b = tab1.number_input("Tversnittsbredde[mm]:",value=1000)
-ø = tab1.number_input("Armeringsdiameter[mm]:",min_value=8, max_value=32, value=16)
+ø = tab1.number_input("Armeringsdiameter[mm]:",min_value=8, max_value=32, value=16, step=1)
 s = tab1.number_input("Senteravstand armering[mm}:",value=200)
 c = tab1.number_input("Nominell overdekning[mm]:",value=35)
-M_ed_short = tab3.number_input("MEd_short[kNm]:",value=10.0)
-M_ed_long = tab3.number_input("MEd_long[kNm]:",value=10.0)
+M_ed_short = tab3.number_input("MEd_short[kNm]:",value=10)
+M_ed_long = tab3.number_input("MEd_long[kNm]:",value=10)
 M_ed_tot = M_ed_long+M_ed_short                     #Totalt moment
-tab3.write("MEd_tot = "+str(M_ed_tot)+" kNm")
+tab3.write("MEd_tot = "+str(round(M_ed_tot,2))+" kNm")
 
 Ac = h*b                                            #Betongareal
 As = (math.pow(ø/2,2)*math.pi*b)/s                  #Armeringsareal
 d = h-c-(ø/2)                                       #Effektiv tverrsnittstykkelse
-tab1.write("As = "+str(As))
+tab1.write("As = "+str(round(As)))
 
 RHstr = tab2.slider(
     "Relativ luftfuktighet (RH)",
@@ -61,22 +61,22 @@ if uttørking == "1 side":
 elif uttørking == "2 sider":
     u = 2*b
 
-tab3.header("Rissparametere iht 7.3.4(3):")
+tab3.write("Rissparametere iht 7.3.4(3):")
 k_1 =tab3.number_input("k1 (0.8 for stenger med god heft):", value=0.8)
 k_2 =tab3.number_input("k2 (0.5 for ren bøying, 1 for rent strekk):", value=0.5)
 
 
 #Betongkvaliteter
 Bx = ["f_ctm","E_cm","f_ck"]
-B25 = [2.2,31,25]
-B30 = [2.6,33,30]
-B35 = [3.2,34,35]
-B45 = [3.8,35,45]
+B25 = [2.2,31,25,1.8]
+B30 = [2.6,33,30,2.0]
+B35 = [3.2,34,35,2.2]
+B45 = [3.8,35,45,2.7]
 
-tab1.header("Generelle materialdata:")
 valg_betongkvalitet = tab1.radio(
     "Velg betongkvalitet",
-    ("B25","B30","B35","B45")
+    ("B25","B30","B35","B45"),
+    index= 1
 )
 if valg_betongkvalitet == "B25":
     betongkvalitet = B25
@@ -87,10 +87,30 @@ elif valg_betongkvalitet == "B35":
 elif valg_betongkvalitet == "B45":
     betongkvalitet = B45
 
-f_ctm = tab3.number_input("fctm[MPa]:",value=betongkvalitet[0])
-E_cm = tab3.number_input("Ecm[GPa]:",value=betongkvalitet[1])
-E_s = tab3.number_input("Es[GPa]:",value=200)
-f_ck = betongkvalitet[2]
+matrerialdata = tab1.checkbox("Egendefinert materialdata")
+tab1.write("Tabell 3.1:")
+f_ct_005 = betongkvalitet[3]
+f_ctd = 0.85*f_ct_005/1.5
+
+if matrerialdata:
+    f_ck = tab1.number_input("fck[MPa]:", value=betongkvalitet[2])
+    f_ctm = tab1.number_input("fctm[MPa]:", value=betongkvalitet[0])
+    E_cm = tab1.number_input("Ecm[GPa]:", value=betongkvalitet[1])
+    tab1.write("3.2.7(4):")
+    E_s = tab1.number_input("Es[GPa]:", value=200)
+
+else:
+    f_ctm = betongkvalitet[0]
+    E_cm = betongkvalitet[1]
+    E_s = 200
+    f_ck = betongkvalitet[2]
+    tab1.write("fck = " + str(f_ck) + " MPa")
+    tab1.write("fctm = " +str(f_ctm)+" MPa")
+    tab1.write("Ecm = " + str(E_cm)+" GPa")
+    tab1.write("3.2.7(4):")
+    tab1.write("Es = " +str(E_s)+" GPa" )
+
+
 f_cm = f_ck+8
 
 
@@ -146,7 +166,7 @@ if f_cm <= 35:
     beta_H =min(1500,1.5*(1+math.pow(0.012*100*RH,18))*h0+250)
 else:
     phi_RH = (1 + ((1 - RH) / (0.1 * math.pow(h0, (1 / 3))))*alpha_1)*alpha_2
-    beta_H = min(1500*alpha_3, (1.5 * (1 + math.pow(0.012 * 100 * RH, 18)) * h0 + 250)*alpha_3)
+    beta_H = min(1500*alpha_3, (1.5 * (1 + math.pow(0.012 * 100 * RH, 18)) * h0 + 250*alpha_3))
 
 
 beta_ct_to = math.pow((t-t0)/(beta_H+t-t0),0.3)                 #(B.7)
@@ -163,9 +183,16 @@ epsilon_ca_t = beta_ast*epsilon_ca_lim                          #(3.11)
 epsilon_cs_beregnet = 1000*(epsilon_cd_t+epsilon_ca_t)          #(3.8)
 phi_beregnet = phi_0*beta_ct_to                                 #(B.1)
 
+phi_checkbox = tab2.checkbox("Egendefinert kryptall/svinntøyning?")
+if phi_checkbox:
+    phi = tab2.number_input("Kryptall:",value=round(phi_beregnet,3))
+    epsilon_cs = (tab2.number_input("Svinntøyning:", value=round(epsilon_cs_beregnet, 3))) / 1000000
+else:
+    phi = phi_beregnet
+    tab2.write("Kryptall: "+str(round(phi,3)))
+    epsilon_cs = epsilon_cs_beregnet / 1000000
+    tab2.write("Svinntøyning: " + str(round(epsilon_cs * 1000000, 3)))
 
-phi = tab2.number_input("Kryptall:",value=round(phi_beregnet,3))
-epsilon_cs = (tab2.number_input("Svinntøyning:",value=round(epsilon_cs_beregnet,3)))/1000000
 
 
 n_short = M_ed_short/M_ed_tot                       #Andel korttidslast
@@ -184,7 +211,6 @@ rhoeta = rho*eta
 alpha = math.sqrt(math.pow(rhoeta,2)+2*rhoeta)-rhoeta
 I_s = As*(1-alpha)*(1-(alpha/3))*math.pow(d,2)
 sigma_s = (M_ed_tot/I_s)*(1-alpha)*d                            #Spenning i armering fra moment
-
 
 
 # Beregninger etter EC2
@@ -225,25 +251,32 @@ w_k_ecs = 1000*s_r_max*(epsilon_sm_e_cm+epsilon_cs)
 
 st.sidebar.header("Statiske beregninger")
 
+W_el = (1/6)*b*math.pow(h,2)/1000000
+sigma_l_c = M_ed_tot/W_el
+st.sidebar.write("Spenning i betong: " +str(round(sigma_l_c,2))+" MPa")
+if sigma_l_c < f_ctd:
+    st.sidebar.write("Spenning mindre enn fctd ("+str(round(f_ctd,2))+" MPa)")
+else:
+    st.sidebar.write("Spenning større enn fctd ("+str(round(f_ctd,2))+" MPa)")
+st.sidebar.write("")
+
 st.sidebar.write("Armeringsspenning: "+str(round(sigma_s*1000000))+ " MPa")
+st.sidebar.write("")
 st.sidebar.write("Rissvidde uten svinntøyning: "+str(round(w_k,3))+ " mm")
 st.sidebar.write("Rissvidde med svinntøyning: "+str(round(w_k_ecs,3))+ " mm")
-
-
 
 doknavn = tab4.text_input("Dokumentnavn", value="Beregning av riss")
 doknr = tab4.text_input("Dokumentnummer")
 dok = doknr+" - "+doknavn
 Oppdragsnummer = tab4.text_input("Oppdragsnummer", value="522xxxxx")
 Oppdragsgiver = tab4.text_input("Oppdragsgiver")
-Sign_EK = tab4.text_input("Signatur EK")
-Sign_FK = tab4.text_input("Signatur FK")
+Sign_EK = tab4.text_input("Signatur Utført")
+Sign_FK = tab4.text_input("Signatur Fagkontroll")
 Sign_godkjenning = tab4.text_input("Signatur Godkjenning")
-dato = tab4.text_input("Dato EK", value=str(datetime.date.today()))
-
+dato = tab4.text_input("Dato", value=str(datetime.date.today()))
+#dato2 = tab4.date_input("Dato", value=datetime.date.today())
 
 document = MailMerge("template.docx")
-print(document.get_merge_fields())
 
 document.merge(
         Sign_FK= Sign_FK,
@@ -274,7 +307,7 @@ document.merge(
         t_0=str(t0),
         M_ed_short= str(M_ed_short),
         M_ed_long= str(M_ed_long),
-        M_ed_tot= str(M_ed_tot),
+        M_ed_tot= str(round(M_ed_tot)),
         n_short= str(round(n_short,3)),
         n_long= str(round(n_long,3)),
         E_c_long= str(round(E_c_long)),
