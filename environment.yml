@@ -1,4 +1,0 @@
-name: stats
-dependencies:
-  - streamlit
-  - docx-mailmerge
